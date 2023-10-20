@@ -1,0 +1,26 @@
+.shopping-list-item {
+    border: 1px solid #444;
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .shopping-list-item p {
+    margin: 0;
+  }
+  
+  .shopping-list-item-bought {
+    text-decoration: line-through;
+    color: #888; 
+    background-color: #444;
+    border: 1px solid #444;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
