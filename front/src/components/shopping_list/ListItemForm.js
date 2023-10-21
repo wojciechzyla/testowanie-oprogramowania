@@ -7,10 +7,15 @@ const ListItemForm = (props) => {
   const ShoppingContext = useShoppingListContext();
 
   const addItem = () => {
-    const newItem = {itemName: ShoppingContext.itemName, unit: ShoppingContext.unit, 
+      const newItem = {itemName: ShoppingContext.itemName, unit: ShoppingContext.unit, 
       amount: ShoppingContext.amount, bought: ShoppingContext.bought}
       props.close();
-    axios.post(`http://127.0.0.1:5000/list/${ShoppingContext.listID}/item/add/`, newItem)
+      axios.post(`http://127.0.0.1:5000/list/${ShoppingContext.listID}/item/add/`, 
+      newItem,
+      {headers: {
+          Authorization: 'Bearer ' + props.token
+        }})
+      //axios.post(`http://127.0.0.1:5000/list/${ShoppingContext.listID}/item/add/`, newItem)
   };
   const handleCancel = () => {
     ShoppingContext.resetItem();

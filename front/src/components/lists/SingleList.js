@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useHistory
+import { useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
-import '../styles/SingleList.css'; // Add CSS file for styling
-import {useShoppingListContext} from '../contexts/shopping-list-context';
+import '../../styles/SingleList.css'; 
 
-const SingleList = ({ title, listID, shoppingDate, makeUpdate }) => {
+const SingleList = ( { title, listID, shoppingDate, makeUpdate, token }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const ShoppingContext = useShoppingListContext();
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-    //ShoppingContext.setListID(params.get("listid"));
     navigate(`/list-detail/${listID}`);
   };
 
@@ -21,7 +18,10 @@ const SingleList = ({ title, listID, shoppingDate, makeUpdate }) => {
 
   const handleDelete = async () => {
     close();
-    axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`);
+    axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`,{headers: {
+      Authorization: 'Bearer ' + token
+    }})
+    //axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`);
   };
 
   return (

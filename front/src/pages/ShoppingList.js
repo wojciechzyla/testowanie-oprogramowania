@@ -6,7 +6,7 @@ import axios from 'axios';
 import {useShoppingListContext} from '../contexts/shopping-list-context';
 import ListItemForm from '../components/shopping_list/ListItemForm';
 
-const ShoppingList = () => {
+const ShoppingList = (props) => {
   const ShoppingContext = useShoppingListContext();
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [shoppingListData, setShoppingListData] = useState(null);
@@ -19,9 +19,23 @@ const ShoppingList = () => {
 
   useEffect(() => {
     ShoppingContext.setListID(routeParams["listid"]);
-    axios.get(`http://127.0.0.1:5000/list/${routeParams["listid"]}/`)
+    axios({
+      method: "GET",
+      url:`http://127.0.0.1:5000/list/${routeParams["listid"]}/`,
+      headers: {
+        Authorization: 'Bearer ' + props.token
+      }
+    })
     .then((response) => {
-      setShoppingListData(response.data)
+      const res =response.data
+      res.access_token && props.setToken(res.access_token)
+      setShoppingListData(res.data)
+    }).catch((error) => {
+      if (error.response) {
+        console.log(error.response)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+        }
     })
   }, [update]);
 
@@ -42,12 +56,19 @@ const ShoppingList = () => {
     let item = listCopy.items[index]
     item.bought = !item.bought;
     makeUpdate();
-    axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/update/${index}/`, item)
+    axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/update/${index}/`, 
+    item,
+    {headers: {
+        Authorization: 'Bearer ' + props.token
+      }})
+    //axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/update/${index}/`, item)
   }
 
   const deleteItem = (index) => {
     makeUpdate();
-    axios.delete(`http://127.0.0.1:5000/list/${ShoppingContext.listID}/item/delete/${index}/`)
+    axios.delete(`http://127.0.0.1:5000/list/${ShoppingContext.listID}/item/delete/${index}/`,{headers: {
+      Authorization: 'Bearer ' + props.token
+    }})
   }
 
   const editItem = (index) => {
@@ -69,7 +90,7 @@ const ShoppingList = () => {
             Add item
           </button>
 
-          {showAddItemModal && <ListItemForm close={handleCloseAddItem}/>}
+          {showAddItemModal && <ListItemForm close={handleCloseAddItem} token={props.token}/>}
         </div>
       )}
     </div>

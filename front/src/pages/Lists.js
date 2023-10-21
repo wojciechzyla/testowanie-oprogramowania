@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import SingleList from '../components/SingleList';
+import SingleList from '../components/lists/SingleList';
 import axios from 'axios';
 import '../styles/Lists.css'; // Add CSS file for styling
 
-const Lists = () => {
+const Lists = (props) => {
   const [dummyLists, setDummyLists] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newListData, setNewListData] = useState({ title: '', shoppingDate: '' });
@@ -14,9 +14,23 @@ const Lists = () => {
   }
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:5000/list/names/`)
+    axios({
+      method: "GET",
+      url:"http://127.0.0.1:5000/list/names/",
+      headers: {
+        Authorization: 'Bearer ' + props.token
+      }
+    })
     .then((response) => {
-      setDummyLists(response.data)
+      const res =response.data
+      res.access_token && props.setToken(res.access_token)
+      setDummyLists(res.data)
+    }).catch((error) => {
+      if (error.response) {
+        console.log(error.response)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+        }
     })
   }, [update]);
 
@@ -36,7 +50,11 @@ const Lists = () => {
   const addList = async () => {
     makeUpdate();
     closeModal();
-    axios.post('http://127.0.0.1:5000/list/add/', newListData);
+    axios.post('http://127.0.0.1:5000/list/add/', 
+    newListData,
+    {headers: {
+        Authorization: 'Bearer ' + props.token
+      }});
   };
 
   return (
@@ -50,6 +68,7 @@ const Lists = () => {
           listID={list.listID}
           shoppingDate={list.shoppingDate}
           makeUpdate={makeUpdate}
+          token={props.token}
         />
       ))}
 
