@@ -47,7 +47,7 @@ const Lists = (props) => {
     setNewListData({ ...newListData, [name]: value });
   };
 
-  const addList = async () => {
+  const addList = () => {
     makeUpdate();
     closeModal();
     axios.post('http://127.0.0.1:5000/list/add/', 
@@ -98,10 +98,10 @@ const Lists = (props) => {
               />
 
               <button type="button" onClick={addList}>
-                Add
+                Dodaj
               </button>
               <button type="button" onClick={closeModal}>
-                Cancel
+                Anuluj
               </button>
             </form>
           </div>

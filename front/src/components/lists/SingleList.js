@@ -16,7 +16,7 @@ const SingleList = ( { title, listID, shoppingDate, makeUpdate, token }) => {
     makeUpdate();
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     close();
     axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`,{headers: {
       Authorization: 'Bearer ' + token

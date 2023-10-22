@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for, send_from_directory
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask_cors import cross_origin
@@ -7,16 +7,29 @@ from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
                                unset_jwt_cookies, jwt_required, JWTManager
 from bson.objectid import ObjectId
 import json
+from werkzeug.utils import secure_filename
+import os
+import shutil
 load_dotenv()
 app = Flask(__name__)
 
 MONGO_URI = "mongodb://localhost:27017/"
 app.config["JWT_SECRET_KEY"] = "sdkfn34t3veu$#erdg&$e"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+UPLOAD_FOLDER = 'photos'
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}  # Define allowed file extensions
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 jwt = JWTManager(app)
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client.testowanie
 users = db.users
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.after_request
 @cross_origin()
@@ -103,7 +116,11 @@ def add_list():
 def delete_list(list_id):
     user_id = ObjectId(get_jwt_identity())
     user = list(users.find({"_id": user_id}))[0]
+    list_name = user["lists"][int(list_id)]["title"]
     user["lists"].pop(int(list_id))
+    dir_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), list_name)
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path, ignore_errors=True)
     users.update_one({"_id": user_id}, {"$set": {"lists": user["lists"]}})
     return "success", 200
 
@@ -124,8 +141,13 @@ def get_list(list_id):
 def get_list_items(list_id):
     user_id = ObjectId(get_jwt_identity())
     user = list(users.find({"_id": user_id}))[0]
-    result = user["lists"][int(list_id)]
-    return {"data": result["items"]}, 200
+    items = user["lists"][int(list_id)]["items"]
+    return {"data": items}, 200
+
+@app.route('/uploads/<userid>/<listname>/<filename>')
+def uploaded_file(userid, listname, filename):
+    dir_path = os.path.join(app.config['UPLOAD_FOLDER'], userid, listname)
+    return send_from_directory(dir_path, filename)
 
 
 @app.route('/list/<list_id>/item/add/', methods=["POST"])
@@ -134,8 +156,23 @@ def get_list_items(list_id):
 def add_list_item(list_id):
     user_id = ObjectId(get_jwt_identity())
     user = list(users.find({"_id": user_id}))[0]
-    new_item = request.json
-    print(new_item)
+
+    new_item = json.loads(request.form['data'])
+    file = request.files.get('photo', None)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        list_name = user["lists"][int(list_id)]["title"]
+        dir_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), list_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        file.save(os.path.join(dir_path, filename))
+        new_item["file_name"] = filename
+        new_item["image_url"] = url_for('uploaded_file', userid=str(user_id),
+                                        listname=user["lists"][int(list_id)]["title"],
+                                        filename=filename, _external=True)
+    else:
+        new_item["file_name"] = ""
+        new_item["image_url"] = ""
     user["lists"][int(list_id)]["items"].append(new_item)
     users.update_one({"_id": user["_id"]}, {"$set": {"lists": user["lists"]}})
     return "success", 200
@@ -147,7 +184,24 @@ def add_list_item(list_id):
 def delete_list_item(list_id, item_id):
     user_id = ObjectId(get_jwt_identity())
     user = list(users.find({"_id": user_id}))[0]
-    user["lists"][int(list_id)]["items"].pop(int(item_id))
+    deleted_item = user["lists"][int(list_id)]["items"].pop(int(item_id))
+    if deleted_item["file_name"]:
+        list_name = user["lists"][int(list_id)]["title"]
+        dir_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), list_name)
+        if os.path.exists(dir_path):
+            os.remove(os.path.join(dir_path, deleted_item["file_name"]))
+    users.update_one({"_id": user["_id"]}, {"$set": {"lists": user["lists"]}})
+    return "success", 200
+
+
+@app.route('/list/<list_id>/item/bought/<item_id>/', methods=["POST"])
+@cross_origin()
+@jwt_required()
+def bought_list_item(list_id, item_id):
+    new_item = request.json
+    user_id = ObjectId(get_jwt_identity())
+    user = list(users.find({"_id": user_id}))[0]
+    user["lists"][int(list_id)]["items"][int(item_id)] = new_item
     users.update_one({"_id": user["_id"]}, {"$set": {"lists": user["lists"]}})
     return "success", 200
 
@@ -156,9 +210,30 @@ def delete_list_item(list_id, item_id):
 @cross_origin()
 @jwt_required()
 def update_list_item(list_id, item_id):
-    new_item = request.json
     user_id = ObjectId(get_jwt_identity())
     user = list(users.find({"_id": user_id}))[0]
+    old_item = user["lists"][int(list_id)]["items"][int(item_id)]
+    if old_item["file_name"]:
+        list_name = user["lists"][int(list_id)]["title"]
+        dir_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), list_name)
+        if os.path.exists(dir_path):
+            os.remove(os.path.join(dir_path, old_item["file_name"]))
+    new_item = json.loads(request.form['data'])
+    file = request.files.get('photo', None)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        list_name = user["lists"][int(list_id)]["title"]
+        dir_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), list_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        file.save(os.path.join(dir_path, filename))
+        new_item["file_name"] = filename
+        new_item["image_url"] = url_for('uploaded_file', userid=str(user_id),
+                                        listname=user["lists"][int(list_id)]["title"],
+                                        filename=filename, _external=True)
+    else:
+        new_item["file_name"] = ""
+        new_item["image_url"] = ""
     user["lists"][int(list_id)]["items"][int(item_id)] = new_item
     users.update_one({"_id": user["_id"]}, {"$set": {"lists": user["lists"]}})
     return "success", 200

@@ -40,14 +40,15 @@ const ShoppingList = (props) => {
   }, [update]);
 
   const handleOpenAddItem = () => {
-    makeUpdate();
     ShoppingContext.setItemEdit(false);
     ShoppingContext.resetItem();
+    ShoppingContext.setUnit("gr");
     setShowAddItemModal(true);
   }
 
   const handleCloseAddItem = () => {
     makeUpdate();
+    ShoppingContext.resetItem();
     setShowAddItemModal(false);
   }
 
@@ -56,12 +57,11 @@ const ShoppingList = (props) => {
     let item = listCopy.items[index]
     item.bought = !item.bought;
     makeUpdate();
-    axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/update/${index}/`, 
+    axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/bought/${index}/`, 
     item,
     {headers: {
         Authorization: 'Bearer ' + props.token
       }})
-    //axios.post(`http://127.0.0.1:5000/list/${routeParams["listid"]}/item/update/${index}/`, item)
   }
 
   const deleteItem = (index) => {
@@ -72,7 +72,11 @@ const ShoppingList = (props) => {
   }
 
   const editItem = (index) => {
-    
+    makeUpdate();
+    ShoppingContext.setItemEdit(true);
+    ShoppingContext.setItemID(index);
+    ShoppingContext.setUnit("gr");
+    setShowAddItemModal(true);
   }
  
   return (
@@ -83,7 +87,7 @@ const ShoppingList = (props) => {
           <p>Date: {shoppingListData.shoppingDate}</p>
 
           {shoppingListData.items.map((item, index) => (
-            <ShoppingListItem itemName={item.itemName} amount={item.amount} unit={item.unit} handleBought={() => handleBought(index)} bought={item.bought} onDelete={() => deleteItem(index)} onEdit={null} key={index}/>
+            <ShoppingListItem itemName={item.itemName} amount={item.amount} unit={item.unit} handleBought={() => handleBought(index)} bought={item.bought} onDelete={() => deleteItem(index)} onEdit={() => editItem(index)} imageUrl={item.image_url} key={index}/>
           ))}
 
           <button onClick={handleOpenAddItem} className='add-item-button'>

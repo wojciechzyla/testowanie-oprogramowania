@@ -7,8 +7,10 @@ export function ShoppingListContextProvider(props){
     const [itemEdit, setItemEdit] = useState(false);
     const [itemName, setItemName] = useState('');
     const [amount, setAmount] = useState('');
+    const [unit, setUnit] = useState('');
     const [selectedUnit, setSelectedUnit] = useState('grams');
     const [bought, setBought] = useState(false);
+    const [itemID, setItemID] = useState(null);
 
     function resetListID() {
         setListID(null);
@@ -18,6 +20,7 @@ export function ShoppingListContextProvider(props){
         setAmount('');
         setSelectedUnit('');
         setBought(false);
+        setItemID(null);
     }
     const context = {
         listID,
@@ -29,11 +32,15 @@ export function ShoppingListContextProvider(props){
         setItemName,
         amount,
         setAmount,
+        unit,
+        setUnit,
         selectedUnit,
         setSelectedUnit,
         resetItem,
         bought,
-        setBought
+        setBought,
+        itemID,
+        setItemID
     }
     return (
         <ShoppingListContext.Provider value={context}>
