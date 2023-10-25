@@ -1,0 +1,6 @@
+{
+  "presets": [
+    "@babel/preset-env", // You may already have this preset for ES6+ support
+    "@babel/preset-react" // Add this line for React support
+  ]
+}

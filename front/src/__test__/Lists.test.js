@@ -1,43 +1,55 @@
 import React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react';
-import axios from 'axios'; // Import axios for mocking
-import Lists from './Lists';
+import axios from 'axios';
+import Lists from '../pages/Lists';
 
-jest.mock('axios'); // Mock axios
+// Mock axios and set up a mock implementation of axios.get and axios.post
+jest.mock('axios');
+const mockGet = jest.fn();
+const mockPost = jest.fn();
+axios.get = mockGet;
+axios.post = mockPost;
 
 describe('Lists Component', () => {
-  // Mock props
+  const mockToken = 'mock-token';
+
+  // Sample props for testing
   const props = {
-    token: 'your-token',
+    token: mockToken,
     setToken: jest.fn(),
   };
 
-  // Mock Axios response
-  const mockResponse = {
-    data: {
-      access_token: 'mock-access-token',
-      data: [
-        { listID: 1, title: 'List 1', shoppingDate: '2023-10-23' },
-        { listID: 2, title: 'List 2', shoppingDate: '2023-10-24' },
-      ],
-    },
-  };
+  const mockLists = [
+    { listID: 1, title: 'List 1', shoppingDate: '2023-10-23' },
+    { listID: 2, title: 'List 2', shoppingDate: '2023-10-24' },
+  ];
 
-  axios.get.mockResolvedValue(mockResponse);
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPost.mockReset();
+  });
 
-  it('fetches data and renders lists', async () => {
+  it('fetches and renders lists', async () => {
+    // Mock axios.get to resolve with dummy data
+    mockGet.mockResolvedValue({
+      data: {
+        access_token: 'mock-access-token',
+        data: mockLists,
+      },
+    });
+
     render(<Lists {...props} />);
-    
+
     // Wait for the data to load
     await waitFor(() => {
-      const listItems = screen.getAllByTestId('list-item');
-      expect(listItems).toHaveLength(2);
+      const listItems = screen.getAllByTestId('single-list');
+      expect(listItems).toHaveLength(mockLists.length);
     });
   });
 
   it('opens and closes the modal', () => {
     render(<Lists {...props} />);
-    
+
     const openButton = screen.getByText('Add List');
     fireEvent.click(openButton);
 
@@ -52,7 +64,7 @@ describe('Lists Component', () => {
 
   it('adds a new list', async () => {
     render(<Lists {...props} />);
-    
+
     const openButton = screen.getByText('Add List');
     fireEvent.click(openButton);
 
@@ -65,11 +77,11 @@ describe('Lists Component', () => {
     const addButton = screen.getByText('Dodaj');
     fireEvent.click(addButton);
 
-    // You can expect the axios.post function to be called with the appropriate arguments
+    // Ensure that axios.post is called with the correct arguments
     expect(axios.post).toHaveBeenCalledWith(
       'http://127.0.0.1:5000/list/add/',
       { title: 'New List', shoppingDate: '2023-10-25' },
-      { headers: { Authorization: 'Bearer ' + props.token } }
+      { headers: { Authorization: 'Bearer ' + mockToken } }
     );
   });
 });
