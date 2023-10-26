@@ -3,32 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/SingleList.css'; 
 
-const SingleList = ( { title, listID, shoppingDate, makeUpdate, token }) => {
+const SingleList = (props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-    navigate(`/list-detail/${listID}`);
+    navigate(`/list-detail/${props.listID}`);
   };
 
   const close = () => {
     setShowDeleteModal(false);
-    makeUpdate();
+    props.makeUpdate();
   }
 
   const handleDelete = () => {
     close();
-    axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`,{headers: {
-      Authorization: 'Bearer ' + token
+    axios.delete(`http://127.0.0.1:5000/list/delete/${props.listID}`,{headers: {
+      Authorization: 'Bearer ' + props.token
     }})
-    //axios.delete(`http://127.0.0.1:5000/list/delete/${listID}`);
   };
 
   return (
-    <div className="single-list-box">
+    <div data-testid={`${props.dataTestid}`} className="single-list-box">
       <div className="list-info">
-        <h3>{title}</h3>
-        <p>Shopping Date: {shoppingDate}</p>
+        <h3>{props.title}</h3>
+        <p>Shopping Date: {props.shoppingDate}</p>
       </div>
       <div className="list-actions">
         <button onClick={handleViewDetails} className="action-button">

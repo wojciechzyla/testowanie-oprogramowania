@@ -9,14 +9,19 @@ const mockGet = jest.fn();
 const mockPost = jest.fn();
 axios.get = mockGet;
 axios.post = mockPost;
+const mockUsedNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+   ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockUsedNavigate,
+}));
 
 describe('Lists Component', () => {
   const mockToken = 'mock-token';
 
-  // Sample props for testing
   const props = {
     token: mockToken,
     setToken: jest.fn(),
+    dataTestid: "single-list"
   };
 
   const mockLists = [
@@ -30,8 +35,7 @@ describe('Lists Component', () => {
   });
 
   it('fetches and renders lists', async () => {
-    // Mock axios.get to resolve with dummy data
-    mockGet.mockResolvedValue({
+    axios.mockResolvedValue({
       data: {
         access_token: 'mock-access-token',
         data: mockLists,
@@ -48,12 +52,18 @@ describe('Lists Component', () => {
   });
 
   it('opens and closes the modal', () => {
+    axios.mockResolvedValue({
+      data: {
+        access_token: 'mock-access-token',
+        data: mockLists,
+      },
+    });
     render(<Lists {...props} />);
 
-    const openButton = screen.getByText('Add List');
+    const openButton = screen.getByTestId('add-list');;
     fireEvent.click(openButton);
 
-    const modal = screen.getByText('Add List');
+    const modal = screen.getByTestId('add-list-modal-text');
     expect(modal).toBeInTheDocument();
 
     const cancelButton = screen.getByText('Anuluj');
@@ -63,9 +73,15 @@ describe('Lists Component', () => {
   });
 
   it('adds a new list', async () => {
+    axios.mockResolvedValue({
+      data: {
+        access_token: 'mock-access-token',
+        data: mockLists,
+      },
+    });
     render(<Lists {...props} />);
 
-    const openButton = screen.getByText('Add List');
+    const openButton = screen.getByTestId('add-list');;
     fireEvent.click(openButton);
 
     const titleInput = screen.getByLabelText('Title:');

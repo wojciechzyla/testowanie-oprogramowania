@@ -59,10 +59,11 @@ const Lists = (props) => {
 
   return (
     <div className="lists-container">
-      <button onClick={openModal}>Add List</button>
-
+      <button data-testid="add-list" onClick={openModal}>Dodaj Listę</button>
+      
       {dummyLists.map((list) => (
         <SingleList
+          dataTestid="single-list"
           key={list.listID}
           title={list.title}
           listID={list.listID}
@@ -75,7 +76,7 @@ const Lists = (props) => {
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-            <h2>Add List</h2>
+            <h2 data-testid="add-list-modal-text">Dodaj Listę</h2>
             <form>
               <label htmlFor="title">Title:</label>
               <input

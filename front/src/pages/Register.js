@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom'; 
 
@@ -22,9 +22,9 @@ function Register(props) {
         navigate("/");
       }).catch((error) => {
         if (error.response) {
-          console.log(error.response)
-          console.log(error.response.status)
-          console.log(error.response.headers)
+          console.error(error.response)
+          console.error(error.response.status)
+          console.error(error.response.headers)
           }
       })
 
@@ -47,17 +47,19 @@ function Register(props) {
           <form className="login">
               <input onChange={handleChange} 
                     type="login"
+                    data-testid="test-login"
                     text={loginForm.login} 
                     name="login" 
                     placeholder="Login" 
                     value={loginForm.login} />
               <input onChange={handleChange} 
                     type="password"
+                    data-testid="test-password"
                     text={loginForm.password} 
                     name="password" 
                     placeholder="Password" 
                     value={loginForm.password} />
-            <button onClick={register}>Submit</button>
+            <button onClick={register}>Wyślij</button>
           </form>
       </div>
     );

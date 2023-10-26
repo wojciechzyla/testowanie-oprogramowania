@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from "axios";
 import { Link } from 'react-router-dom';
 
@@ -22,9 +22,9 @@ function Login(props) {
         props.setToken(response.data.access_token)
       }).catch((error) => {
         if (error.response) {
-          console.log(error.response)
-          console.log(error.response.status)
-          console.log(error.response.headers)
+          console.error(error.response)
+          console.error(error.response.status)
+          console.error(error.response.headers)
           }
       })
 
@@ -46,18 +46,20 @@ function Login(props) {
         <h1>Zaloguj</h1>
           <form className="login">
               <input onChange={handleChange} 
+                    data-testid="test-login"
                     type="login"
                     text={loginForm.login} 
                     name="login" 
                     placeholder="Login" 
                     value={loginForm.login} />
               <input onChange={handleChange} 
+                    data-testid="test-password"
                     type="password"
                     text={loginForm.password} 
                     name="password" 
                     placeholder="Password" 
                     value={loginForm.password} />
-            <button onClick={logMeIn}>Submit</button>
+            <button onClick={logMeIn}>Wyślij</button>
           </form>
           <Link to='/register'>Załóż konto</Link>
       </div>
